@@ -1,0 +1,35 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# gRPC generated
+*.pb.go
+*_grpc.pb.go
+*_pb2.py
+*_pb2_grpc.py
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
