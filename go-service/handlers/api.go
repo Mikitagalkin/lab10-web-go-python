@@ -2,12 +2,13 @@
 
 import (
     "net/http"
+    "strings"
     "time"
 
     "github.com/gin-gonic/gin"
 )
 
-// Ping — простой health-check (задание 1 средней).
+// Ping — простой health-check.
 func Ping(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{
         "message":   "pong from Go",
@@ -15,9 +16,15 @@ func Ping(c *gin.Context) {
     })
 }
 
-// Hello — приветствие с параметром.
+// Hello — приветствие с валидацией параметра :name.
 func Hello(c *gin.Context) {
-    name := c.Param("name")
+    name := strings.TrimSpace(c.Param("name"))
+    if name == "" {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": "name is required",
+        })
+        return
+    }
     c.JSON(http.StatusOK, gin.H{
         "message": "Hello, " + name + "!",
     })
@@ -28,11 +35,14 @@ type EchoRequest struct {
     Text string `json:"text" binding:"required,min=1,max=200"`
 }
 
-// Echo — возвращает переданный текст.
+// Echo — возвращает переданный текст с валидацией.
 func Echo(c *gin.Context) {
     var req EchoRequest
     if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error":   "validation failed",
+            "details": err.Error(),
+        })
         return
     }
     c.JSON(http.StatusOK, gin.H{
