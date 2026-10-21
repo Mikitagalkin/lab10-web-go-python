@@ -4,6 +4,10 @@ import (
     "context"
     "log"
     "net"
+    "os"
+    "os/signal"
+    "syscall"
+    "time"
 
     "lab10-web-go-python/go-service/proto"
 
@@ -31,8 +35,29 @@ func main() {
     grpcServer := grpc.NewServer()
     proto.RegisterCalculatorServer(grpcServer, &server{})
 
-    log.Println("gRPC server listening on :50051")
-    if err := grpcServer.Serve(lis); err != nil {
-        log.Fatalf("failed to serve: %v", err)
+    go func() {
+        log.Println("gRPC server listening on :50051")
+        if err := grpcServer.Serve(lis); err != nil {
+            log.Fatalf("failed to serve: %v", err)
+        }
+    }()
+
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    <-quit
+    log.Println("Shutting down gRPC server...")
+
+    done := make(chan struct{})
+    go func() {
+        grpcServer.GracefulStop()
+        close(done)
+    }()
+
+    select {
+    case <-done:
+        log.Println("gRPC server gracefully stopped")
+    case <-time.After(5 * time.Second):
+        grpcServer.Stop()
+        log.Println("gRPC server forced to stop")
     }
 }
